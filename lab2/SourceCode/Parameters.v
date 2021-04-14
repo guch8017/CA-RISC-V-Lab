@@ -17,17 +17,17 @@
 `ifndef CONST_VALUES
 `define CONST_VALUES
 //ALUContrl[3:0]
-    `define SLL  4'd0
-    `define SRL  4'd1
-    `define SRA  4'd2
-    `define ADD  4'd3
-    `define SUB  4'd4
-    `define XOR  4'd5
-    `define OR  4'd6
-    `define AND  4'd7
-    `define SLT  4'd8
-    `define SLTU  4'd9
-    `define LUI  4'd10
+    `define SLL  4'd0   // 4'b0000
+    `define SRL  4'd1   // 4'b0001
+    `define SRA  4'd2   // 4'b0010
+    `define ADD  4'd3   // 4'b0011
+    `define SUB  4'd4   // 4'b0100
+    `define XOR  4'd5   // 4'b0101
+    `define OR  4'd6    // 4'b0110
+    `define AND  4'd7   // 4'b0111
+    `define SLT  4'd8   // 4'b1000
+    `define SLTU  4'd9  // 4'b1001
+    `define LUI  4'd10  // 4'b1010
 //BranchType[2:0]
     `define NOBRANCH  3'd0
     `define BEQ  3'd1
@@ -50,4 +50,6 @@
     `define LW  3'd3			//	write 32bit to Register
     `define LBU  3'd4			//	load 8bit from Mem then unsigned extended to 32bit
     `define LHU  3'd5			//	load 16bit from Mem then unsigned extended to 32bit
+
+
 `endif

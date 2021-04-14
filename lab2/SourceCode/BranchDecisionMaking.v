@@ -27,8 +27,23 @@ module BranchDecisionMaking(
     input wire [31:0] Operand1,Operand2,
     output reg BranchE
     );
+
+    wire signed [31:0] SignedOperand1, SignedOperand2;
+    assign SignedOperand1 = Operand1;
+    assign SignedOperand2 = Operand2;
     
-    // 请补全此处代码
+    always @(*) begin
+        case (BranchTypeE)
+            `NOBRANCH: BranchE <= 1'b0;
+            `BEQ: BranchE <= (Operand1 == Operand2) ? 1'b1 : 1'b0;
+            `BNE: BranchE <= (Operand1 != Operand2) ? 1'b1 : 1'b0;
+            `BLT: BranchE <= (SignedOperand1 < SignedOperand2) ? 1'b1 : 1'b0;
+            `BLTU: BranchE <= (Operand1 < Operand2) ? 1'b1 : 1'b0;
+            `BGE: BranchE <= (SignedOperand1 >= SignedOperand2) ? 1'b1 : 1'b0;
+            `BGEU: BranchE <= (Operand1 >= Operand2) ? 1'b1 : 1'b0;
+            default: BranchE <= 1'b0;
+        endcase
+    end
 
 endmodule
 

@@ -30,7 +30,25 @@ module ALU(
     output reg [31:0] AluOut
     );    
     
-    // 请补全此处代码
+    wire signed [31:0] SignedOperand1, SignedOperand2;
+    assign SignedOperand1 = Operand1;
+    assign SignedOperand2 = Operand2;
 
+    always @(*) begin
+        case (AluContrl)
+            `ADD: AluOut <= Operand1 + Operand2;
+            `SUB: AluOut <= Operand1 - Operand2;
+            `SLL: AluOut <= Operand1 << Operand2[4:0];
+            `SRL: AluOut <= Operand1 >> Operand2[4:0];
+            `SRA: AluOut <= Operand1 >>> Operand2[4:0];
+            `SLT: AluOut <= (SignedOperand1 < SignedOperand2) ? 1 : 0;
+            `SLTU: AluOut <= (Operand1 < Operand2) ? 1 : 0;
+            `XOR: AluOut <= Operand1 ^ Operand2;
+            `OR: AluOut <= Operand1 | Operand2;
+            `AND: AluOut <= Operand1 & Operand2;
+            `LUI: AluOut <= Operand2;
+            default: AluOut <= 0;
+        endcase
+    end
 endmodule
 

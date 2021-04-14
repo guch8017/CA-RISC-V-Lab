@@ -83,16 +83,27 @@ module WBSegReg(
         end
 
     wire [31:0] RD_raw;
+    // 根据DataRam模块描述，wea传入值与写入满足以下关系：
+    // |  WE  | 写入地址 |
+    // | ---- | ------- |
+    // | 0001 | [7:0]   | 小端
+    // | 0010 | [15:8]  |
+    // | 0100 | [23:16] |
+    // | 1000 | [31:24] | 大端
+    // 若写入类型为SB，则CU给出WE=0001
+    // 目标写入地址为 xxxx00，则写入到xxxx00的[7:0]
+    // 目标写入地址为 xxxx01，则写入到xxxx00的[15:8]
+    // 由小端的特性决定我们只需要将WE进行一次左移操作即可实现写入到目标位置，而由于字大小为8，故WD数据需要偏移的量为A[1:0] * 8 即左移3位
     DataRam DataRamInst (
-        .clk    (???),                      //请完善代码
-        .wea    (???),                      //请完善代码
-        .addra  (???),                      //请完善代码
-        .dina   (???),                      //请完善代码
-        .douta  ( RD_raw         ),
-        .web    ( WE2            ),
-        .addrb  ( A2[31:2]       ),
-        .dinb   ( WD2            ),
-        .doutb  ( RD2            )
+        .clk    ( clk                   ),
+        .wea    ( WE << A[1:0]          ),
+        .addra  ( A[31:2]               ),
+        .dina   ( WD << (A[1:0] << 3)   ),
+        .douta  ( RD_raw                ),
+        .web    ( WE2                   ),
+        .addrb  ( A2[31:2]              ),
+        .dinb   ( WD2                   ),
+        .doutb  ( RD2                   )
     );   
     // Add clear and stall support
     // if chip not enabled, output output last read result

@@ -23,7 +23,7 @@ RISC-V 32bit 整型指令集（除去FENCE,FENCE.I,CSR,ECALL 和 EBREAK 指令�
 3. 描述执行一条 LHU 指令的过程（数据通路、控制信号等）。 
 4. 如果要实现 CSR 指令（csrrw，csrrs，csrrc，csrrwi，csrrsi，csrrci），设计图中还需要增 加什么部件和数据通路？给出详细说明。 
 5. Verilog 如何实现立即数的扩展？ 
-6. 如何实现 Data Cache 的非字对齐的 Load 和 Store？ 
+6. 如何实现 Data Memory 的非字对齐的 Load 和 Store？ 
 7. ALU 模块中，默认 wire 变量是有符号数还是无符号数？ 
 8. 简述BranchE信号的作用。 
 9. NPC Generator 中对于不同跳转 target 的选择有没有优先级？ 

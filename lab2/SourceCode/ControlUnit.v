@@ -9,24 +9,25 @@
 // Tool Versions: Vivado 2017.4.1
 // Description: RISC-V Instruction Decoder
 //////////////////////////////////////////////////////////////////////////////////
-//功能和接口说明
-    //ControlUnit       是本CPU的指令译码器，组合逻辑电路
+//功能和接口说�?
+    //ControlUnit       是本CPU的指令译码器，组合�?�辑电路
 //输入
-    // Op               是指令的操作码部分
+    // Op               是指令的操作码部�?
     // Fn3              是指令的func3部分
     // Fn7              是指令的func7部分
 //输出
     // JalD==1          表示Jal指令到达ID译码阶段
     // JalrD==1         表示Jalr指令到达ID译码阶段
-    // RegWriteD        表示ID阶段的指令对应的寄存器写入模式
-    // MemToRegD==1     表示ID阶段的指令需要将data memory读取的值写入寄存器,
-    // MemWriteD        共4bit，采用独热码格式，对于data memory的32bit字按byte进行写入,MemWriteD=0001表示只写入最低1个byte，和xilinx bram的接口类似
+    // RegWriteD        表示ID阶段的指令对应的寄存器写入模�?
+    // MemToRegD==1     表示ID阶段的指令需要将data memory读取的�?�写入寄存器,
+    // MemWriteD        �?4bit，采用独热码格式，对于data memory�?32bit字按byte进行写入,MemWriteD=0001表示只写入最�?1个byte，和xilinx bram的接口类�?
     // LoadNpcD==1      表示将NextPC输出到ResultM
-    // RegReadD         表示A1和A2对应的寄存器值是否被使用到了，用于forward的处理
-    // BranchTypeD      表示不同的分支类型，所有类型定义在Parameters.v中
-    // AluContrlD       表示不同的ALU计算功能，所有类型定义在Parameters.v中
-    // AluSrc2D         表示Alu输入源2的选择
-    // AluSrc1D         表示Alu输入源1的选择
+    // RegReadD         表示A1和A2对应的寄存器值是否被使用到了，用于forward的处�?
+    // RegReadD[0] ~ RS1，RegReadD[1] ~ RS2
+    // BranchTypeD      表示不同的分支类型，�?有类型定义在Parameters.v�?
+    // AluContrlD       表示不同的ALU计算功能，所有类型定义在Parameters.v�?
+    // AluSrc2D         表示Alu输入�?2的�?�择
+    // AluSrc1D         表示Alu输入�?1的�?�择
     // ImmType          表示指令的立即数格式
 //实验要求  
     //补全模块  
@@ -71,60 +72,70 @@
     `define F3_SB       3'b000
     `define F3_SH       3'b001
     `define F3_SW       3'b010
+// ALUSrc1，坑，和图片上的不一样、、
+    `define SRC1_PCE    1'b1
+    `define SRC1_FD1    1'b0
+// ALUSrc2
+    `define SRC2_IMM    2'b10
+    `define SRC2_RS2    2'b01
+    `define SRC2_FD2    2'b00
 
 module ControlUnit(
     input wire [6:0] Op,
     input wire [2:0] Fn3,
     input wire [6:0] Fn7,
-    output wire JalD,
-    output wire JalrD,
+    output reg JalD,
+    output reg JalrD,
     output reg [2:0] RegWriteD,
-    output wire MemToRegD,
+    output reg MemToRegD,
     output reg [3:0] MemWriteD,
-    output wire LoadNpcD,
+    output reg LoadNpcD,
     output reg [1:0] RegReadD,
     output reg [2:0] BranchTypeD,
     output reg [3:0] AluContrlD,
-    output wire [1:0] AluSrc2D,
-    output wire AluSrc1D,
+    output reg [1:0] AluSrc2D,
+    output reg AluSrc1D,
     output reg [2:0] ImmType        
     ); 
     
     always @(*) begin
         case (Op)
             `OP_IMM: begin
+                // 坑 ，LI也在这里但是文档没写、、、
                 RegWriteD <= `LW;
                 ImmType <= `ITYPE;
-                JalD <= 0;
+                JalD = 0;
                 JalrD <= 0;
                 MemToRegD <= 0;
                 LoadNpcD <= 0;
-                RegReadD <= 1'b1;
+                RegReadD <= 2'b01;
                 BranchTypeD <= `NOBRANCH;
-                AluSrc1D <= 1'b1;
-                AluSrc2D <= 2'd2;
+                AluSrc1D <= `SRC1_FD1;
+                AluSrc2D <= `SRC2_IMM;
                 MemWriteD <= 4'b0;
                 if (Fn3 == 3'b001 && Fn7 == 7'b0000000) begin
                     AluContrlD <= `SLL;
-                end else if(Fn3 == 3'b101 && Fn7 == 7'b0000000)begin
+                end else if(Fn3 == 3'b101 && Fn7 == 7'b0000000) begin
                     AluContrlD <= `SRL;
-                end else begin
+                end else if(Fn3 == 3'b101 && Fn7 == 7'b0100000) begin
                     AluContrlD <= `SRA;
+                end else begin
+                    AluContrlD <= `LUI;
                 end
             end
 
             `OP_REG: begin
-                // 通用赋值
+                // 通用赋�??
                 RegWriteD <= `LW;
                 ImmType <= `ITYPE;
                 JalD <= 0;
                 JalrD <= 0;
                 MemToRegD <= 0;
                 LoadNpcD <= 0;
-                RegReadD <= 1'b1;
+                RegReadD <= 2'b11;
                 BranchTypeD <= `NOBRANCH;
-                AluSrc1D <= 1'b1;
-                AluSrc2D <= 2'b0;
+                AluSrc1D <= `SRC1_FD1;
+                AluSrc2D <= `SRC2_FD2;
                 MemWriteD <= 4'b0;
                 // Funct 特异
                 case (Fn3)
@@ -141,17 +152,17 @@ module ControlUnit(
             end
 
             `OP_REGI: begin
-                // 通用赋值
+                // 通用赋�??
                 RegWriteD <= `LW;
                 ImmType <= `ITYPE;
                 JalD <= 0;
                 JalrD <= 0;
                 MemToRegD <= 0;
                 LoadNpcD <= 0;
-                RegReadD <= 1'b1;
+                RegReadD <= 2'b01;
                 BranchTypeD <= `NOBRANCH;
-                AluSrc1D <= 1'b1;
-                AluSrc2D <= 2'd2;
+                AluSrc1D <= `SRC1_FD1;
+                AluSrc2D <= `SRC2_IMM;
                 MemWriteD <= 4'b0;
                 // Funct 特异
                 case (Fn3)
@@ -174,8 +185,8 @@ module ControlUnit(
                 LoadNpcD <= 0;
                 RegReadD <= 0;
                 BranchTypeD <= `NOBRANCH;
-                AluSrc1D <= 0;  // 无所谓
-                AluSrc2D <= 2'd2;
+                AluSrc1D <= 0;  // 无所�?
+                AluSrc2D <= `SRC2_IMM;
                 AluContrlD <= `LUI;
                 MemWriteD <= 4'b0;
             end
@@ -189,8 +200,8 @@ module ControlUnit(
                 LoadNpcD <= 0;
                 RegReadD <= 0;
                 BranchTypeD <= `NOBRANCH;
-                AluSrc1D <= 0;      // PcE
-                AluSrc2D <= 2'd2;   // ImmE
+                AluSrc1D <= `SRC1_PCE;      // PcE
+                AluSrc2D <= `SRC2_IMM;   // ImmE
                 AluContrlD <= `ADD;
                 MemWriteD <= 4'b0;
             end
@@ -202,10 +213,10 @@ module ControlUnit(
                 JalrD <= 1'b1;      // Jalr
                 MemToRegD <= 0;     // FromALU
                 LoadNpcD <= 1'b1;   // PC
-                RegReadD <= 1'b1;   // Read
+                RegReadD <= 2'b01;  // Read
                 BranchTypeD <= `NOBRANCH;
-                AluSrc1D <= 0;      // PcE
-                AluSrc2D <= 2'd2;   // ImmE
+                AluSrc1D <= `SRC1_PCE;      // PcE
+                AluSrc2D <= `SRC2_IMM;   // ImmE
                 AluContrlD <= `ADD;
                 MemWriteD <= 4'b0;
             end
@@ -232,9 +243,9 @@ module ControlUnit(
                 JalrD <= 0;
                 MemToRegD <= 0;     // 随意
                 LoadNpcD <= 1'b1;   // 随意
-                RegReadD <= 1'b1;   // Read          
-                AluSrc1D <= 0;      // 随意
-                AluSrc2D <= 2'd2;   // 随意
+                RegReadD <= 2'b11;  // Read          
+                AluSrc1D <= `SRC1_FD1;      // 随意
+                AluSrc2D <= `SRC2_FD2;   // 随意
                 AluContrlD <= `ADD; // 随意
                 MemWriteD <= 4'b0;
 
@@ -255,10 +266,10 @@ module ControlUnit(
                 JalrD <= 0;
                 MemToRegD <= 1'b1;  // FromMem
                 LoadNpcD <= 0;
-                RegReadD <= 1'b1;   // Read
+                RegReadD <= 2'b01;  // Read
                 BranchTypeD <= `NOBRANCH;
-                AluSrc1D <= 1'b1;   // From Reg
-                AluSrc2D <= 2'd2;   // From Imme
+                AluSrc1D <= `SRC1_FD1;   // From Reg
+                AluSrc2D <= `SRC2_IMM;   // From Imme
                 AluContrlD <= `ADD; // Reg + Imme
                 MemWriteD <= 4'b0;
 
@@ -278,10 +289,10 @@ module ControlUnit(
                 JalrD <= 0;
                 MemToRegD <= 0;     // 随意
                 LoadNpcD <= 0;
-                RegReadD <= 1'b1;   // Read
+                RegReadD <= 2'b11;  // Read
                 BranchTypeD <= `NOBRANCH;
-                AluSrc1D <= 1'b1;   // From Reg
-                AluSrc2D <= 2'd2;   // From Imme
+                AluSrc1D <= `SRC1_FD1;   // From Reg
+                AluSrc2D <= `SRC2_IMM;   // From Imme
                 AluContrlD <= `ADD; // Reg + Imme
                 RegWriteD <= `NOREGWRITE;
                 
@@ -294,7 +305,21 @@ module ControlUnit(
                 
             end
 
-            default: 
+            default: begin
+            // DO NOTHING
+                ImmType <= `ITYPE;
+                JalD <= 0;
+                JalrD <= 0;
+                MemToRegD <= 0;
+                LoadNpcD <= 0;
+                RegReadD <= 0;
+                BranchTypeD <= `NOBRANCH;
+                AluSrc1D <= 0;
+                AluSrc2D <= 0;
+                AluContrlD <= `ADD;
+                RegWriteD <= `NOREGWRITE;
+                MemWriteD <= 0;
+            end
         endcase
     end
 

@@ -55,8 +55,8 @@ module IDSegReg(
     
     wire [31:0] RD_raw;
     InstructionRam InstructionRamInst (
-         .clk    (),                        //请完善代码
-         .addra  (),                        //请完善代码
+         .clk    ( clk        ),
+         .addra  ( A[31:2]    ),
          .douta  ( RD_raw     ),
          .web    ( |WE2       ),
          .addrb  ( A2[31:2]   ),

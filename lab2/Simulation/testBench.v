@@ -13,10 +13,10 @@
 // !!! ALL YOU NEED TO CHANGE IS 4 FILE PATH BELOW !!!	
 //				(they are all optional, you can run cpu without change paths here,if files are failed to open, we will not dump the content to .txt and will not try to initial your bram)
 //////////////////////////////////////////////////////////////////////////////////
-`define DataRamContentLoadPath "D:\\Vivado\\CA_lab\\testbench\\1testAll.data"           //修改此处为测试数据路径
-`define InstRamContentLoadPath "D:\\Vivado\\CA_lab\\testbench\\1testAll.inst"           //修改此处为测试数据路径
-`define DataRamContentSavePath "D:\\Vivado\\CA_lab\\testbench\\DataRamContent.txt"      //修改此处为测试数据路径
-`define InstRamContentSavePath "D:\\Vivado\\CA_lab\\testbench\\InstRamContent.txt"      //修改此处为测试数据路径
+`define DataRamContentLoadPath "G:\\OneDrive - mail.ustc.edu.cn\\2nd half of 3rd year\\ustc_ca2021_lab\\lab2\\Simulation\\1testAll.data"           //修改此处为测试数据路�?
+`define InstRamContentLoadPath "G:\\OneDrive - mail.ustc.edu.cn\\2nd half of 3rd year\\ustc_ca2021_lab\\lab2\\Simulation\\1testAll.inst"           //修改此处为测试数据路�?
+`define DataRamContentSavePath "G:\\OneDrive - mail.ustc.edu.cn\\2nd half of 3rd year\\ustc_ca2021_lab\\lab2\\Simulation\\DataRamContent.txt"      //修改此处为测试数据路�?
+`define InstRamContentSavePath "G:\\OneDrive - mail.ustc.edu.cn\\2nd half of 3rd year\\ustc_ca2021_lab\\lab2\\Simulation\\InstRamContent.txt"      //修改此处为测试数据路�?
 `define BRAMWORDS 4096  //a word is 32bit, so our bram is 4096*32bit
 
 module testBench(

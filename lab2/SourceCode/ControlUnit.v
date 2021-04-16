@@ -120,7 +120,15 @@ module ControlUnit(
                 end else if(Fn3 == 3'b101 && Fn7 == 7'b0100000) begin
                     AluContrlD <= `SRA;
                 end else begin
-                    AluContrlD <= `LUI;
+                    case (Fn3)
+                    `F3_ADD: AluContrlD <= `ADD;
+                    `F3_SLT: AluContrlD <= `SLT;
+                    `F3_SLTU: AluContrlD <= `SLTU;
+                    `F3_XOR: AluContrlD <= `XOR;
+                    `F3_OR: AluContrlD <= `OR;
+                    `F3_AND: AluContrlD <= `AND; 
+                    default: AluContrlD <= 0;
+                endcase
                 end
             end
 
@@ -150,7 +158,7 @@ module ControlUnit(
                     default: AluContrlD <= 0;
                 endcase
             end
-
+            /*
             `OP_REGI: begin
                 // 通用赋�??
                 RegWriteD <= `LW;
@@ -175,7 +183,7 @@ module ControlUnit(
                     default: AluContrlD <= 0;
                 endcase
             end
-
+            */
             `OP_LUI: begin
                 RegWriteD <= `LW;
                 ImmType <= `UTYPE;
@@ -208,14 +216,14 @@ module ControlUnit(
 
             `OP_JALR: begin
                 RegWriteD <= `LW;
-                ImmType <= `UTYPE;
+                ImmType <= `ITYPE;
                 JalD <= 0;
                 JalrD <= 1'b1;      // Jalr
                 MemToRegD <= 0;     // FromALU
                 LoadNpcD <= 1'b1;   // PC
                 RegReadD <= 2'b01;  // Read
                 BranchTypeD <= `NOBRANCH;
-                AluSrc1D <= `SRC1_PCE;      // PcE
+                AluSrc1D <= `SRC1_FD1;      // PcE
                 AluSrc2D <= `SRC2_IMM;   // ImmE
                 AluContrlD <= `ADD;
                 MemWriteD <= 4'b0;

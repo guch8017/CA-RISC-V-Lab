@@ -25,7 +25,8 @@ module RegisterFile(
     input wire [4:0] A3,
     input wire [31:0] WD3,
     output wire [31:0] RD1,
-    output wire [31:0] RD2
+    output wire [31:0] RD2,
+    output wire [31:0] D3
     );
 
     reg [31:0] RegFile[31:1];
@@ -39,5 +40,5 @@ module RegisterFile(
     //    
     assign RD1= (A1==5'b0)?32'b0:RegFile[A1];
     assign RD2= (A2==5'b0)?32'b0:RegFile[A2];
-    
+    assign D3 = RegFile[3];
 endmodule

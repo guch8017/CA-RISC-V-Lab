@@ -24,7 +24,8 @@ module RV32Core(
     input wire [31:0] CPU_Debug_InstRAM_A2,
     input wire [31:0] CPU_Debug_InstRAM_WD2,
     input wire [ 3:0] CPU_Debug_InstRAM_WE2,
-    output wire [31:0] CPU_Debug_InstRAM_RD2
+    output wire [31:0] CPU_Debug_InstRAM_RD2,
+    output wire [31:0] CPU_Debug_Register3
     );
 	//wire values definitions
     wire StallF, FlushF, StallD, FlushD, StallE, FlushE, StallM, FlushM, StallW, FlushW;
@@ -170,7 +171,8 @@ module RV32Core(
         .A3(RdW),
         .WD3(RegWriteData),
         .RD1(RegOut1D),
-        .RD2(RegOut2D)
+        .RD2(RegOut2D),
+        .D3(CPU_Debug_Register3)
     );
 
     // ---------------------------------------------

@@ -20,7 +20,7 @@
     // JalrD==1         表示Jalr指令到达ID译码阶段
     // RegWriteD        表示ID阶段的指令对应的寄存器写入模式
     // MemToRegD==1     表示ID阶段的指令需要将data memory读取的值写入寄存器,
-    // MemWriteD        共4bit，采用独热码格式，对于data memory的32bit字按byte进行写入,MemWriteD=0001表示只写入最低1个byte，和xilinx bram的接口类似
+    // MemWriteD        共4bit，为1的部分表示有效，对于data memory的32bit字按byte进行写入,MemWriteD=0001表示只写入最低1个byte，和xilinx bram的接口类似
     // LoadNpcD==1      表示将NextPC输出到ResultM
     // RegReadD         表示A1和A2对应的寄存器值是否被使用到了，用于forward的处理
     // BranchTypeD      表示不同的分支类型，所有类型定义在Parameters.v中

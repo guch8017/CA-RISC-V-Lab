@@ -47,6 +47,7 @@ module ALU(
             `OR: AluOut <= Operand1 | Operand2;
             `AND: AluOut <= Operand1 & Operand2;
             `LUI: AluOut <= Operand2;
+            `CLR: AluOut <= Operand1 & (~Operand2);
             default: AluOut <= 0;
         endcase
     end

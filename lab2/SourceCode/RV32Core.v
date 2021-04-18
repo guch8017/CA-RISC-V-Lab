@@ -32,13 +32,13 @@ module RV32Core(
     wire [31:0] PC_In;
     wire [31:0] PCF;
     wire [31:0] Instr, PCD;
-    wire JalD, JalrD, LoadNpcD, MemToRegD, AluSrc1D;
+    wire JalD, JalrD, LoadNpcD;
     wire [2:0] RegWriteD;
     wire [3:0] MemWriteD;
     wire [1:0] RegReadD;
     wire [2:0] BranchTypeD;
     wire [3:0] AluContrlD;
-    wire [1:0] AluSrc2D;
+    wire [1:0] AluSrc2D, AluSrc1D;
     wire [2:0] RegWriteW;
     wire [4:0] RdW;
     wire [31:0] RegWriteData;
@@ -58,13 +58,12 @@ module RV32Core(
     wire [31:0] RegOut2E;
     wire JalrE;
     wire [2:0] RegWriteE;
-    wire MemToRegE;
     wire [3:0] MemWriteE;
     wire LoadNpcE;
     wire [1:0] RegReadE;
     wire [2:0] BranchTypeE;
     wire [3:0] AluContrlE;
-    wire AluSrc1E;
+    wire [1:0] AluSrc1E;
     wire [1:0] AluSrc2E;
     wire [31:0] Operand1;
     wire [31:0] Operand2;
@@ -78,25 +77,29 @@ module RV32Core(
     wire [4:0] RdM;
     wire [31:0] PCM;
     wire [2:0] RegWriteM;
-    wire MemToRegM;
     wire [3:0] MemWriteM;
     wire LoadNpcM;
     wire [31:0] DM_RD;
     wire [31:0] ResultM;
     wire [31:0] ResultW;
-    wire MemToRegW;
     wire [1:0] Forward1E;
     wire [1:0] Forward2E;
     wire [1:0] LoadedBytesSelect;
+    // Add CSR datapath
+    wire [11:0] CSRdD, CSRdE, CSRdM, CSRdW;
+    wire CSRWeD, CSRWeE, CSRWeM, CSRWeW;
+    wire [31:0] CSROutD, CSROutE, CSROutM, CSROutW;
+    wire [1:0] MemToRegD, MemToRegE, MemToRegM, MemToRegW;
+
     //wire values assignments
     assign {Funct7D, Rs2D, Rs1D, Funct3D, RdD, OpCodeD} = Instr;
     assign JalNPC=ImmD+PCD;
     assign ForwardData1 = Forward1E[1]?(AluOutM):( Forward1E[0]?RegWriteData:RegOut1E );
-    assign Operand1 = AluSrc1E?PCE:ForwardData1;
+    assign Operand1 = AluSrc1E[1]?(CSROutE):((AluSrc1E[0])?PCE:ForwardData1);
     assign ForwardData2 = Forward2E[1]?(AluOutM):( Forward2E[0]?RegWriteData:RegOut2E );
-    assign Operand2 = AluSrc2E[1]?(ImmE):( AluSrc2E[0]?Rs2E:ForwardData2 );
+    assign Operand2 = AluSrc2E[1]?((AluSrc2E)?CSROutE:ImmE):( AluSrc2E[0]?Rs2E:ForwardData2 );
     assign ResultM = LoadNpcM ? (PCM+4) : AluOutM;
-    assign RegWriteData = ~MemToRegW?ResultW:DM_RD_Ext;
+    assign RegWriteData = MemToRegW[1] ? CSROutW : (MemToRegW[0] ? DM_RD_Ext : ResultW);
 
     //Module connections
     // ---------------------------------------------
@@ -217,7 +220,13 @@ module RV32Core(
         .AluSrc1D(AluSrc1D),
         .AluSrc1E(AluSrc1E),
         .AluSrc2D(AluSrc2D),
-        .AluSrc2E(AluSrc2E)
+        .AluSrc2E(AluSrc2E),
+        .CSROutD(CSROutD),
+        .CSROutE(CSROutE),
+        .CSRWeD(CSRWeD),
+        .CSRWeE(CSRWeE),
+        .CSRdD(CSRdD),
+        .CSRdE(CSRdE)
     	); 
 
     ALU ALU1(
@@ -256,7 +265,13 @@ module RV32Core(
         .MemWriteE(MemWriteE),
         .MemWriteM(MemWriteM),
         .LoadNpcE(LoadNpcE),
-        .LoadNpcM(LoadNpcM)
+        .LoadNpcM(LoadNpcM),
+        .CSROutE(CSROutE),
+        .CSROutM(CSROutM),
+        .CSRWeE(CSRWeE),
+        .CSRWeM(CSRWeM),
+        .CSRdE(CSRdE),
+        .CSRdM(CSRdM)
     );
 
     // ---------------------------------------------
@@ -282,7 +297,13 @@ module RV32Core(
         .RegWriteM(RegWriteM),
         .RegWriteW(RegWriteW),
         .MemToRegM(MemToRegM),
-        .MemToRegW(MemToRegW)
+        .MemToRegW(MemToRegW),
+        .CSROutM(CSROutM),
+        .CSROutW(CSROutW),
+        .CSRWeM(CSRWeM),
+        .CSRWeW(CSRWeW),
+        .CSRdM(CSRdM),
+        .CSRdW(CSRdW)
     );
     
     DataExt DataExt1(

@@ -28,6 +28,7 @@
     `define SLT  4'd8   // 4'b1000
     `define SLTU  4'd9  // 4'b1001
     `define LUI  4'd10  // 4'b1010
+    `define CLR  4'd11  // 4'b1011
 //BranchType[2:0]
     `define NOBRANCH  3'd0
     `define BEQ  3'd1

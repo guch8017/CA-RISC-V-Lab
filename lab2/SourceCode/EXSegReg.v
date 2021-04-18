@@ -40,8 +40,8 @@ module EXSegReg(
     output reg JalrE,
     input wire [2:0] RegWriteD,
     output reg [2:0] RegWriteE,
-    input wire MemToRegD,
-    output reg MemToRegE,
+    input wire [1:0] MemToRegD,
+    output reg [1:0] MemToRegE,
     input wire [3:0] MemWriteD,
     output reg [3:0] MemWriteE,
     input wire LoadNpcD,
@@ -52,10 +52,17 @@ module EXSegReg(
     output reg [2:0] BranchTypeE,
     input wire [4:0] AluContrlD,
     output reg [4:0] AluContrlE,
-    input wire AluSrc1D,
-    output reg AluSrc1E,
+    input wire [1:0] AluSrc1D,
+    output reg [1:0] AluSrc1E,
     input wire [1:0] AluSrc2D,
-    output reg [1:0] AluSrc2E
+    output reg [1:0] AluSrc2E,
+    // Add CSR Datapath
+    input wire [31:0] CSROutD,
+    output reg [31:0] CSROutE,
+    input wire CSRWeD,
+    output reg CSRWeE,
+    input wire [11:0] CSRdD,
+    output reg [11:0] CSRdE
     );
     initial begin
         PCE        = 32'b0; 
@@ -68,14 +75,17 @@ module EXSegReg(
         RegOut2E   = 32'b0;
         JalrE      = 1'b0;
         RegWriteE  = 1'b0;
-        MemToRegE  = 1'b0;
+        MemToRegE  = 2'b0;
         MemWriteE  = 1'b0;
         LoadNpcE   = 1'b0;
         RegReadE   = 2'b00;
         BranchTypeE = 3'b0;
         AluContrlE = 5'b0;
-        AluSrc1E   = 1'b0; 
+        AluSrc1E   = 2'b0; 
         AluSrc2E   = 2'b0; 
+        CSRWeE     = 1'b0;
+        CSROutE    = 32'b0;
+        CSRdE      = 12'b0;
     end
     //
     always@(posedge clk) begin
@@ -92,13 +102,13 @@ module EXSegReg(
                 RegOut2E<=32'b0;
                 JalrE<=1'b0;
                 RegWriteE<=1'b0;
-                MemToRegE<=1'b0;
+                MemToRegE<=2'b0;
                 MemWriteE<=1'b0;
                 LoadNpcE<=1'b0;
                 RegReadE<=2'b00;
                 BranchTypeE = 3'b0;
                 AluContrlE<=5'b0;
-                AluSrc1E<=1'b0; 
+                AluSrc1E<=2'b0; 
                 AluSrc2E<=2'b0;     
             end else begin
                 PCE<=PCD; 
@@ -118,7 +128,10 @@ module EXSegReg(
                 BranchTypeE = BranchTypeD;
                 AluContrlE<=AluContrlD;
                 AluSrc1E<=AluSrc1D;
-                AluSrc2E<=AluSrc2D;         
+                AluSrc2E<=AluSrc2D;
+                CSROutE<=CSROutD;
+                CSRdE<=CSRdD;
+                CSRWeE<=CSRWeD;
             end
         end
     

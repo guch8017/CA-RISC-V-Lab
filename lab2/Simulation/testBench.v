@@ -32,6 +32,7 @@ module testBench(
     reg [31:0] CPU_Debug_InstRAM_WD2;
     reg [3:0] CPU_Debug_InstRAM_WE2;
     wire [31:0] CPU_Debug_InstRAM_RD2;
+    wire [31:0] CPU_Debug_Register3;
     //generate clock signal
     always #1 CPU_CLK = ~CPU_CLK;
     // Connect the CPU core
@@ -45,7 +46,8 @@ module testBench(
         .CPU_Debug_InstRAM_A2(CPU_Debug_InstRAM_A2),
         .CPU_Debug_InstRAM_WD2(CPU_Debug_InstRAM_WD2),
         .CPU_Debug_InstRAM_WE2(CPU_Debug_InstRAM_WE2),
-        .CPU_Debug_InstRAM_RD2(CPU_Debug_InstRAM_RD2)
+        .CPU_Debug_InstRAM_RD2(CPU_Debug_InstRAM_RD2),
+        .CPU_Debug_Register3(CPU_Debug_Register3)
         );
     //define file handles
     integer LoadDataRamFile;

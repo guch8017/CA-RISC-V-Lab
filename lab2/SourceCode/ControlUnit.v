@@ -45,7 +45,7 @@
     `define OP_BR       7'b1100011  //  条件分支
     `define OP_LOAD     7'b0000011  //  Load
     `define OP_STORE    7'b0100011  //  Store
-    `define OP_SYS      0           //  CSR相关指令
+    `define OP_SYS      7'b1110011  //  CSR相关指令
 // Funtc 3 ALU
     `define F3_ADD      3'b000
     `define F3_SLL      3'b001
@@ -72,13 +72,26 @@
     `define F3_SB       3'b000
     `define F3_SH       3'b001
     `define F3_SW       3'b010
-// ALUSrc1，坑，和图片上的不一样、、
-    `define SRC1_PCE    1'b1
-    `define SRC1_FD1    1'b0
+// Funct 3 CSR
+    `define CSR_RW      3'b001
+    `define CSR_RS      3'b010
+    `define CSR_RC      3'b011
+    `define CSR_RWI     3'b101
+    `define CSR_RSI     3'b110
+    `define CSR_RCI     3'b111
+// ALUSrc1
+    `define SRC1_CSR    2'b10
+    `define SRC1_PCE    2'b01
+    `define SRC1_FD1    2'b00
 // ALUSrc2
+    `define SRC2_CSR    2'b11
     `define SRC2_IMM    2'b10
     `define SRC2_RS2    2'b01
     `define SRC2_FD2    2'b00
+// MemToReg
+    `define MTR_CSR     2'b10
+    `define MTR_MEM     2'b01
+    `define MTR_ALU     2'b00
 
 module ControlUnit(
     input wire [6:0] Op,
@@ -87,15 +100,16 @@ module ControlUnit(
     output reg JalD,
     output reg JalrD,
     output reg [2:0] RegWriteD,
-    output reg MemToRegD,
+    output reg [1:0] MemToRegD,
     output reg [3:0] MemWriteD,
     output reg LoadNpcD,
     output reg [1:0] RegReadD,
     output reg [2:0] BranchTypeD,
     output reg [3:0] AluContrlD,
     output reg [1:0] AluSrc2D,
-    output reg AluSrc1D,
-    output reg [2:0] ImmType        
+    output reg [1:0] AluSrc1D,
+    output reg [2:0] ImmType,
+    output reg CSRWriteD
     ); 
     
     always @(*) begin
@@ -106,13 +120,14 @@ module ControlUnit(
                 ImmType <= `ITYPE;
                 JalD = 0;
                 JalrD <= 0;
-                MemToRegD <= 0;
+                MemToRegD <= `MTR_ALU;
                 LoadNpcD <= 0;
                 RegReadD <= 2'b01;
                 BranchTypeD <= `NOBRANCH;
                 AluSrc1D <= `SRC1_FD1;
                 AluSrc2D <= `SRC2_IMM;
                 MemWriteD <= 4'b0;
+                CSRWriteD <= 1'b0;
                 if (Fn3 == 3'b001 && Fn7 == 7'b0000000) begin
                     AluContrlD <= `SLL;
                 end else if(Fn3 == 3'b101 && Fn7 == 7'b0000000) begin
@@ -138,13 +153,14 @@ module ControlUnit(
                 ImmType <= `ITYPE;
                 JalD <= 0;
                 JalrD <= 0;
-                MemToRegD <= 0;
+                MemToRegD <= `MTR_ALU;
                 LoadNpcD <= 0;
                 RegReadD <= 2'b11;
                 BranchTypeD <= `NOBRANCH;
                 AluSrc1D <= `SRC1_FD1;
                 AluSrc2D <= `SRC2_FD2;
                 MemWriteD <= 4'b0;
+                CSRWriteD <= 1'b0;
                 // Funct 特异
                 case (Fn3)
                     `F3_ADD: AluContrlD <= (Fn7 == 7'b0100000) ? `SUB : `ADD;
@@ -158,38 +174,13 @@ module ControlUnit(
                     default: AluContrlD <= 0;
                 endcase
             end
-            /*
-            `OP_REGI: begin
-                // 通用赋�??
-                RegWriteD <= `LW;
-                ImmType <= `ITYPE;
-                JalD <= 0;
-                JalrD <= 0;
-                MemToRegD <= 0;
-                LoadNpcD <= 0;
-                RegReadD <= 2'b01;
-                BranchTypeD <= `NOBRANCH;
-                AluSrc1D <= `SRC1_FD1;
-                AluSrc2D <= `SRC2_IMM;
-                MemWriteD <= 4'b0;
-                // Funct 特异
-                case (Fn3)
-                    `F3_ADD: AluContrlD <= `ADD;
-                    `F3_SLT: AluContrlD <= `SLT;
-                    `F3_SLTU: AluContrlD <= `SLTU;
-                    `F3_XOR: AluContrlD <= `XOR;
-                    `F3_OR: AluContrlD <= `OR;
-                    `F3_AND: AluContrlD <= `AND; 
-                    default: AluContrlD <= 0;
-                endcase
-            end
-            */
+
             `OP_LUI: begin
                 RegWriteD <= `LW;
                 ImmType <= `UTYPE;
                 JalD <= 0;
                 JalrD <= 0;
-                MemToRegD <= 0;
+                MemToRegD <= `MTR_ALU;
                 LoadNpcD <= 0;
                 RegReadD <= 0;
                 BranchTypeD <= `NOBRANCH;
@@ -197,6 +188,7 @@ module ControlUnit(
                 AluSrc2D <= `SRC2_IMM;
                 AluContrlD <= `LUI;
                 MemWriteD <= 4'b0;
+                CSRWriteD <= 1'b0;
             end
 
             `OP_AUI: begin
@@ -204,7 +196,7 @@ module ControlUnit(
                 ImmType <= `UTYPE;
                 JalD <= 0;
                 JalrD <= 0;
-                MemToRegD <= 0;
+                MemToRegD <= `MTR_ALU;
                 LoadNpcD <= 0;
                 RegReadD <= 0;
                 BranchTypeD <= `NOBRANCH;
@@ -212,6 +204,7 @@ module ControlUnit(
                 AluSrc2D <= `SRC2_IMM;   // ImmE
                 AluContrlD <= `ADD;
                 MemWriteD <= 4'b0;
+                CSRWriteD <= 1'b0;
             end
 
             `OP_JALR: begin
@@ -219,7 +212,7 @@ module ControlUnit(
                 ImmType <= `ITYPE;
                 JalD <= 0;
                 JalrD <= 1'b1;      // Jalr
-                MemToRegD <= 0;     // FromALU
+                MemToRegD <= `MTR_ALU;     // FromALU
                 LoadNpcD <= 1'b1;   // PC
                 RegReadD <= 2'b01;  // Read
                 BranchTypeD <= `NOBRANCH;
@@ -227,6 +220,7 @@ module ControlUnit(
                 AluSrc2D <= `SRC2_IMM;   // ImmE
                 AluContrlD <= `ADD;
                 MemWriteD <= 4'b0;
+                CSRWriteD <= 1'b0;
             end
 
             `OP_JAL: begin
@@ -234,7 +228,7 @@ module ControlUnit(
                 ImmType <= `JTYPE;
                 JalD <= 1'b1;       // Jal
                 JalrD <= 0;
-                MemToRegD <= 0;     // FromALU
+                MemToRegD <= `MTR_ALU;     // FromALU
                 LoadNpcD <= 1'b1;   // PC
                 RegReadD <= 0;
                 BranchTypeD <= `NOBRANCH;
@@ -242,6 +236,7 @@ module ControlUnit(
                 AluSrc2D <= 2'd2;   // 随意
                 AluContrlD <= `ADD; // 随意
                 MemWriteD <= 4'b0;
+                CSRWriteD <= 1'b0;
             end
 
             `OP_BR: begin
@@ -249,13 +244,14 @@ module ControlUnit(
                 ImmType <= `BTYPE;
                 JalD <= 0;
                 JalrD <= 0;
-                MemToRegD <= 0;     // 随意
+                MemToRegD <= `MTR_ALU;     // 随意
                 LoadNpcD <= 1'b1;   // 随意
                 RegReadD <= 2'b11;  // Read          
                 AluSrc1D <= `SRC1_FD1;      // 随意
                 AluSrc2D <= `SRC2_FD2;   // 随意
                 AluContrlD <= `ADD; // 随意
                 MemWriteD <= 4'b0;
+                CSRWriteD <= 1'b0;
 
                 case (Fn3)
                     `F3_BEQ: BranchTypeD <= `BEQ;
@@ -272,7 +268,7 @@ module ControlUnit(
                 ImmType <= `ITYPE;
                 JalD <= 0;
                 JalrD <= 0;
-                MemToRegD <= 1'b1;  // FromMem
+                MemToRegD <= `MTR_MEM;  // FromMem
                 LoadNpcD <= 0;
                 RegReadD <= 2'b01;  // Read
                 BranchTypeD <= `NOBRANCH;
@@ -280,6 +276,7 @@ module ControlUnit(
                 AluSrc2D <= `SRC2_IMM;   // From Imme
                 AluContrlD <= `ADD; // Reg + Imme
                 MemWriteD <= 4'b0;
+                CSRWriteD <= 1'b0;
 
                 case (Fn3)
                     `F3_LB: RegWriteD <= `LB;
@@ -295,7 +292,7 @@ module ControlUnit(
                 ImmType <= `STYPE;
                 JalD <= 0;
                 JalrD <= 0;
-                MemToRegD <= 0;     // 随意
+                MemToRegD <= `MTR_ALU;     // 随意
                 LoadNpcD <= 0;
                 RegReadD <= 2'b11;  // Read
                 BranchTypeD <= `NOBRANCH;
@@ -303,6 +300,7 @@ module ControlUnit(
                 AluSrc2D <= `SRC2_IMM;   // From Imme
                 AluContrlD <= `ADD; // Reg + Imme
                 RegWriteD <= `NOREGWRITE;
+                CSRWriteD <= 1'b0;
                 
                 case (Fn3)
                     `F3_SB: MemWriteD <= 4'b0001;
@@ -310,6 +308,61 @@ module ControlUnit(
                     `F3_SW: MemWriteD <= 4'b1111;
                     default: MemWriteD <= 4'b0;
                 endcase
+                
+            end
+
+            `OP_SYS: begin
+                ImmType <= `STYPE;      // 用不到该模块
+                JalD <= 0;
+                JalrD <= 0;
+                LoadNpcD <= 0;
+                BranchTypeD <= `NOBRANCH;
+                MemToRegD <= `MTR_CSR;
+                RegWriteD <= `LW;
+                MemWriteD <= 0;
+                CSRWriteD <= 1'b1;
+
+                case (Fn3)
+                    `CSR_RW: begin
+                        RegReadD <= 2'b01;
+                        AluSrc1D <= `SRC1_FD1;  // 随意
+                        AluSrc2D <= `SRC2_CSR;  
+                        AluContrlD <= `LUI;
+                    end 
+
+                    `CSR_RC: begin
+                        RegReadD <= 2'b01;
+                    end
+
+                    `CSR_RS: begin
+                        RegReadD <= 2'b01;
+                    end
+
+                    `CSR_RWI: begin
+                        RegReadD <= 2'b0;
+                    end
+
+                    `CSR_RCI: begin
+                        RegReadD <= 2'b0;
+                    end
+
+                    `CSR_RSI: begin
+                        RegReadD <= 2'b0;
+                    end
+
+                    default: begin
+                        RegReadD <= 2'b0;
+                    end
+                endcase
+
+
+                RegReadD <= 2'b11;
+                
+                AluSrc1D <= `SRC1_FD1;
+                AluSrc2D <= `SRC2_IMM;
+                AluContrlD <= `ADD;
+                
+                CSRWriteD <= 1'b0;
                 
             end
 
@@ -327,6 +380,7 @@ module ControlUnit(
                 AluContrlD <= `ADD;
                 RegWriteD <= `NOREGWRITE;
                 MemWriteD <= 0;
+                CSRWriteD <= 1'b0;
             end
         endcase
     end

@@ -60,26 +60,39 @@ module WBSegReg(
     //output constrol signals
     input wire [2:0] RegWriteM,
     output reg [2:0] RegWriteW,
-    input wire MemToRegM,
-    output reg MemToRegW
+    input wire [1:0] MemToRegM,
+    output reg [1:0] MemToRegW,
+    // Add CSR Datapath
+    input wire [31:0] CSROutM,
+    output reg [31:0] CSROutW,
+    input wire CSRWeM,
+    output reg CSRWeW,
+    input wire [11:0] CSRdM,
+    output reg [11:0] CSRdW
     );
     
     //
     initial begin
         LoadedBytesSelect = 2'b00;
         RegWriteW         =  1'b0;
-        MemToRegW         =  1'b0;
+        MemToRegW         =  2'b0;
         ResultW           =     0;
         RdW               =  5'b0;
+        CSROutW           =     0;
+        CSRWeW            =     0;
+        CSRdW             =     0;
     end
     //
     always@(posedge clk)
         if(en) begin
             LoadedBytesSelect <= clear ? 2'b00 : A[1:0];
             RegWriteW         <= clear ?  1'b0 : RegWriteM;
-            MemToRegW         <= clear ?  1'b0 : MemToRegM;
+            MemToRegW         <= clear ?  2'b0 : MemToRegM;
             ResultW           <= clear ?     0 : ResultM;
             RdW               <= clear ?  5'b0 : RdM;
+            CSROutW           <= clear ?     0 : CSROutM;
+            CSRdW             <= clear ?     0 : CSRdM;
+            CSRWeW            <= clear ?     0 : CSRWeM;
         end
 
     wire [31:0] RD_raw;

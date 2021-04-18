@@ -30,12 +30,19 @@ module MEMSegReg(
     //Control Signals
     input wire [2:0] RegWriteE,
     output reg [2:0] RegWriteM,
-    input wire MemToRegE,
-    output reg MemToRegM,
+    input wire [1:0] MemToRegE,
+    output reg [1:0] MemToRegM,
     input wire [3:0] MemWriteE,
     output reg [3:0] MemWriteM,
     input wire LoadNpcE,
-    output reg LoadNpcM
+    output reg LoadNpcM,
+    // Add CSR Datapath
+    input wire [31:0] CSROutE,
+    output reg [31:0] CSROutM,
+    input wire CSRWeE,
+    output reg CSRWeM,
+    input wire [11:0] CSRdE,
+    output reg [11:0] CSRdM
     );
     initial begin
         AluOutM    = 0;
@@ -43,7 +50,7 @@ module MEMSegReg(
         RdM        = 5'h0;
         PCM        = 0;
         RegWriteM  = 3'h0;
-        MemToRegM  = 1'b0;
+        MemToRegM  = 2'b0;
         MemWriteM  = 4'b0;
         LoadNpcM   = 0;
     end
@@ -55,9 +62,12 @@ module MEMSegReg(
             RdM        <= clear ?  5'h0 : RdE;
             PCM        <= clear ?     0 : PCE;
             RegWriteM  <= clear ?  3'h0 : RegWriteE;
-            MemToRegM  <= clear ?  1'b0 : MemToRegE;
+            MemToRegM  <= clear ?  2'b0 : MemToRegE;
             MemWriteM  <= clear ?  4'b0 : MemWriteE;
             LoadNpcM   <= clear ?     0 : LoadNpcE;
+            CSROutM    <= clear ?     0 : CSROutE;
+            CSRdM      <= clear ?     0 : CSRdE;
+            CSRWeM     <= clear ?     0 : CSRWeE;
         end
     
 endmodule

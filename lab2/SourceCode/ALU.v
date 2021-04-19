@@ -40,7 +40,7 @@ module ALU(
             `SUB: AluOut <= Operand1 - Operand2;
             `SLL: AluOut <= Operand1 << Operand2[4:0];
             `SRL: AluOut <= Operand1 >> Operand2[4:0];
-            `SRA: AluOut <= Operand1 >>> Operand2[4:0];
+            `SRA: AluOut <= SignedOperand1 >>> Operand2[4:0];
             `SLT: AluOut <= (SignedOperand1 < SignedOperand2) ? 1 : 0;
             `SLTU: AluOut <= (Operand1 < Operand2) ? 1 : 0;
             `XOR: AluOut <= Operand1 ^ Operand2;

@@ -111,7 +111,7 @@ module WBSegReg(
         .clk    ( clk                   ),
         .wea    ( WE << A[1:0]          ),
         .addra  ( A[31:2]               ),
-        .dina   ( WD << (A[1:0] << 3)   ),
+        .dina   ( WD << (A[1:0] * 8)    ),  // << 3传进去是0，不知道为啥
         .douta  ( RD_raw                ),
         .web    ( WE2                   ),
         .addrb  ( A2[31:2]              ),

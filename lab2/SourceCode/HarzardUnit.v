@@ -57,13 +57,13 @@ module HarzardUnit(
             {StallF, StallD, StallE, StallM, StallW} <= 5'b0;
             {FlushF, FlushD, FlushE, FlushM, FlushW} <= 5'b11111;
         end
-        else if((RegReadE[0] && Rs1D == RdE && MemToRegE) || // 寄存器端�?1 Hazard
-           (RegReadE[1] && Rs2D == RdE && MemToRegE))   // 寄存器端�?2 Hazard
+        else if((RegReadE[0] && Rs1D == RdE && MemToRegE) || // 寄存器端口1 Hazard
+           (RegReadE[1] && Rs2D == RdE && MemToRegE))   // 寄存器端口2 Hazard
            begin
                StallF <= 1;
                StallD <= 1;
                FlushE <= 1;
-               {StallW, StallD, StallM, FlushF, FlushD, FlushE, FlushM, FlushW} <= 8'b0;
+               {FlushF, FlushD, StallE, StallM, FlushM, StallW, FlushW} <= 8'b0;
            end
         else if(BranchE != `NOBRANCH || JalrE != 0) begin
             FlushE <= 1'b1;

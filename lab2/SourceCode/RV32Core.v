@@ -89,17 +89,21 @@ module RV32Core(
     wire [11:0] CSRdD, CSRdE, CSRdM, CSRdW;
     wire CSRWeD, CSRWeE, CSRWeM, CSRWeW;
     wire [31:0] CSROutD, CSROutE, CSROutM, CSROutW;
+    wire [31:0] CSRFwE; // 数据相关转发
+    wire [1:0] CSR_FW;
     wire [1:0] MemToRegD, MemToRegE, MemToRegM, MemToRegW;
 
     //wire values assignments
     assign {Funct7D, Rs2D, Rs1D, Funct3D, RdD, OpCodeD} = Instr;
     assign JalNPC=ImmD+PCD;
     assign ForwardData1 = Forward1E[1]?(AluOutM):( Forward1E[0]?RegWriteData:RegOut1E );
-    assign Operand1 = AluSrc1E[1]?(CSROutE):((AluSrc1E[0])?PCE:ForwardData1);
+    assign Operand1 = AluSrc1E[1]?(CSR_FW):((AluSrc1E[0])?PCE:ForwardData1);
     assign ForwardData2 = Forward2E[1]?(AluOutM):( Forward2E[0]?RegWriteData:RegOut2E );
-    assign Operand2 = AluSrc2E[1]?((AluSrc2E)?CSROutE:ImmE):( AluSrc2E[0]?Rs2E:ForwardData2 );
+    assign Operand2 = AluSrc2E[1]?((AluSrc2E[0])?CSR_FW:ImmE):((AluSrc2E[0])?Rs2E:ForwardData2 );
     assign ResultM = LoadNpcM ? (PCM+4) : AluOutM;
     assign RegWriteData = MemToRegW[1] ? CSROutW : (MemToRegW[0] ? DM_RD_Ext : ResultW);
+    assign CSRFwE = (CSR_FW[1]) ? (CSROutW) : ((CSR_FW[0]) ? (CSROutM) : (CSROutE));
+    assign CSRdD = Instr[31:20];
 
     //Module connections
     // ---------------------------------------------
@@ -266,7 +270,7 @@ module RV32Core(
         .MemWriteM(MemWriteM),
         .LoadNpcE(LoadNpcE),
         .LoadNpcM(LoadNpcM),
-        .CSROutE(CSROutE),
+        .CSROutE(CSRFwE),
         .CSROutM(CSROutM),
         .CSRWeE(CSRWeE),
         .CSRWeM(CSRWeM),
@@ -347,5 +351,32 @@ module RV32Core(
         .Forward2E(Forward2E)
     	);    
     	         
+    // ---------------------------------------------
+    // CSR Register File
+    // ---------------------------------------------
+    CSRRegisterFile CSRRegisterFile1(
+        .clk(CPU_CLK),
+        .rst(CPU_RST),
+        .WE(CSRWeW),
+        .RA(CSRdD),
+        .WA(CSRdW),
+        .WD(ResultW),
+        .RD(CSROutD),
+        .DebugRA(),
+        .DebugRD()
+    );
+
+    // ---------------------------------------------
+    // CSR Forward Unit
+    // ---------------------------------------------
+    CSRForward CSRForward1(
+        .CSRdD(CSRdD), 
+        .CSRdE(CSRdE), 
+        .CSRdM(CSRdM), 
+        .CSRdW(CSRdW),
+        .CSRWeM(CSRWeM), 
+        .CSRWeW(CSRWeW),
+        .CSRMux(CSR_FW)
+    );
 endmodule
 

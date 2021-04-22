@@ -312,7 +312,7 @@ module ControlUnit(
             end
 
             `OP_SYS: begin
-                ImmType <= `STYPE;      // 用不到该模块
+                ImmType <= `CTYPE;  // 零扩展
                 JalD <= 0;
                 JalrD <= 0;
                 LoadNpcD <= 0;
@@ -325,45 +325,53 @@ module ControlUnit(
                 case (Fn3)
                     `CSR_RW: begin
                         RegReadD <= 2'b01;
-                        AluSrc1D <= `SRC1_FD1;  // 随意
-                        AluSrc2D <= `SRC2_CSR;  
-                        AluContrlD <= `LUI;
+                        AluSrc1D <= `SRC1_FD1;
+                        AluSrc2D <= `SRC2_CSR;  // 随意  
+                        AluContrlD <= `LUI2;    // From Src1
                     end 
 
                     `CSR_RC: begin
                         RegReadD <= 2'b01;
+                        AluSrc1D <= `SRC1_FD1;
+                        AluSrc2D <= `SRC2_CSR;
+                        AluContrlD <= `CLR;
                     end
 
                     `CSR_RS: begin
                         RegReadD <= 2'b01;
+                        AluSrc1D <= `SRC1_FD1;
+                        AluSrc2D <= `SRC2_CSR;
+                        AluContrlD <= `OR;
                     end
 
                     `CSR_RWI: begin
                         RegReadD <= 2'b0;
+                        AluSrc1D <= `SRC1_CSR;
+                        AluSrc2D <= `SRC2_IMM;
+                        AluContrlD <= `LUI;     // From Src2
                     end
 
                     `CSR_RCI: begin
                         RegReadD <= 2'b0;
+                        AluSrc1D <= `SRC1_CSR;
+                        AluSrc2D <= `SRC2_IMM;
+                        AluContrlD <= `CLR2;    // Operand1 & (~Operand2)
                     end
 
                     `CSR_RSI: begin
                         RegReadD <= 2'b0;
+                        AluSrc1D <= `SRC1_CSR;
+                        AluSrc2D <= `SRC2_IMM;
+                        AluContrlD <= `OR;
                     end
 
                     default: begin
                         RegReadD <= 2'b0;
+                        AluSrc1D <= 0;
+                        AluSrc2D <= 0;
+                        AluContrlD <= `LUI;
                     end
                 endcase
-
-
-                RegReadD <= 2'b11;
-                
-                AluSrc1D <= `SRC1_FD1;
-                AluSrc2D <= `SRC2_IMM;
-                AluContrlD <= `ADD;
-                
-                CSRWriteD <= 1'b0;
-                
             end
 
             default: begin

@@ -28,10 +28,12 @@
 `ifndef FORWARD_MUX_ID
 `define FORWARD_MUX_ID
 
+    `define FW1_CSR_MEM 2'b11
     `define FW1_ALU_MEM 2'b10
     `define FW1_REG_WB  2'b01
     `define FW1_REG_EX  2'b00
 
+    `define FW2_CSR_MEM 2'b11
     `define FW2_ALU_MEM 2'b10
     `define FW2_REG_WB  2'b01
     `define FW2_REG_EX  2'b00
@@ -43,8 +45,9 @@ module HarzardUnit(
     input wire BranchE, JalrE, JalD, 
     input wire [4:0] Rs1D, Rs2D, Rs1E, Rs2E, RdE, RdM, RdW,
     input wire [1:0] RegReadE,
-    input wire MemToRegE,
+    input wire [1:0] MemToRegE,
     input wire [2:0] RegWriteM, RegWriteW,
+    input wire CSRWeM,  // 若发生CSR的数据冲突需要特别处理
     output reg StallF, FlushF, StallD, FlushD, StallE, FlushE, StallM, FlushM, StallW, FlushW,
     output reg [1:0] Forward1E, Forward2E
     );
@@ -57,8 +60,8 @@ module HarzardUnit(
             {StallF, StallD, StallE, StallM, StallW} <= 5'b0;
             {FlushF, FlushD, FlushE, FlushM, FlushW} <= 5'b11111;
         end
-        else if((RegReadE[0] && Rs1D == RdE && MemToRegE) || // 寄存器端口1 Hazard
-           (RegReadE[1] && Rs2D == RdE && MemToRegE))   // 寄存器端口2 Hazard
+        else if((RegReadE[0] && Rs1D == RdE && MemToRegE == 2'b01) || // 寄存器端口1 Hazard
+           (RegReadE[1] && Rs2D == RdE && MemToRegE == 2'b01))   // 寄存器端口2 Hazard
            begin
                StallF <= 1;
                StallD <= 1;
@@ -84,18 +87,36 @@ module HarzardUnit(
 
     // Forward
     always @(*) begin
-        if(RegWriteM && (RdM != 0) && (RdM == Rs1E))
-            Forward1E <= `FW1_ALU_MEM;
-        else if(RegWriteW && (RdW != 0) && RdW != 0 && RdW == Rs1E)
+        if(RegWriteM && (RdM != 0) && (RdM == Rs1E)) begin
+            if (CSRWeM) begin
+                Forward1E <= `FW1_CSR_MEM;
+            end
+            else begin
+                Forward1E <= `FW1_ALU_MEM;
+            end
+        end
+        else if(RegWriteW && RdW != 0 && RdW == Rs1E) begin
             Forward1E <= `FW1_REG_WB;
-        else
+        end
+        else begin
             Forward1E <= `FW1_REG_EX;
-        if(RegWriteM && (RdM != 0) && (RdM == Rs2E))
-            Forward2E <= `FW2_ALU_MEM;
-        else if(RegWriteW && (RdW != 0) && RdW != 0 && RdW == Rs2E)
+        end
+            
+        if(RegWriteM && (RdM != 0) && (RdM == Rs2E)) begin
+            if (CSRWeM) begin
+                Forward2E <= `FW2_CSR_MEM;
+            end
+            else begin
+                Forward2E <= `FW2_ALU_MEM;
+            end
+        end
+        else if(RegWriteW && RdW != 0 && RdW == Rs2E) begin
             Forward2E <= `FW2_REG_WB;
-        else
+        end
+        else begin
             Forward2E <= `FW2_REG_EX;
+        end
+            
     end
 
 endmodule

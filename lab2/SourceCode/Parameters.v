@@ -29,6 +29,8 @@
     `define SLTU  4'd9  // 4'b1001
     `define LUI  4'd10  // 4'b1010
     `define CLR  4'd11  // 4'b1011
+    `define CLR2 4'd12  // 4'b1100
+    `define LUI2 4'd13  // 4'b1101
 //BranchType[2:0]
     `define NOBRANCH  3'd0
     `define BEQ  3'd1
@@ -43,7 +45,8 @@
     `define STYPE  3'd2
     `define BTYPE  3'd3
     `define UTYPE  3'd4
-    `define JTYPE  3'd5  
+    `define JTYPE  3'd5 
+    `define CTYPE  3'd6 
 //RegWrite[2:0]  six kind of ways to save values to Register
     `define NOREGWRITE  3'b0	//	Do not write Register
     `define LB  3'd1			//	load 8bit from Mem then signed extended to 32bit

@@ -60,6 +60,10 @@ module HarzardUnit(
             {StallF, StallD, StallE, StallM, StallW} <= 5'b0;
             {FlushF, FlushD, FlushE, FlushM, FlushW} <= 5'b11111;
         end
+        else if(DCacheMiss) begin
+            {StallF, StallD, StallE, StallM, StallW} <= 5'b11111;
+            {FlushF, FlushD, FlushE, FlushM, FlushW} <= 5'b0;
+        end
         else if((RegReadE[0] && Rs1D == RdE && MemToRegE == 2'b01) || // 寄存器端口1 Hazard
            (RegReadE[1] && Rs2D == RdE && MemToRegE == 2'b01))   // 寄存器端口2 Hazard
            begin

@@ -71,7 +71,8 @@ module WBSegReg(
     output reg [11:0] CSRdW,
     input wire rst,
     input wire MemReadM,
-    output wire DCacheMiss
+    output wire DCacheMiss,
+    output wire [31:0] DCacheMissCounter
     );
     
     //
@@ -149,5 +150,20 @@ module WBSegReg(
         RD_old<=RD_raw;
     end    
     assign RD = stall_ff ? RD_old : (clear_ff ? 32'b0 : RD_raw );
+    
+    reg [31:0] counter = 0;
+    reg miss_ff = 1'b0;
+    assign DCacheMissCounter = counter;
+    always @ (posedge clk) begin
+        if(miss_ff) begin
+            if(!DCacheMiss) begin
+                miss_ff <= 0;
+            end
+        end
+        else if(DCacheMiss) begin
+            miss_ff <= 1'b1;
+            counter <= counter + 1;
+        end
+    end
 
 endmodule

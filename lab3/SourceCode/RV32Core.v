@@ -17,15 +17,7 @@
 module RV32Core(
     input wire CPU_CLK,
     input wire CPU_RST,
-    input wire [31:0] CPU_Debug_DataRAM_A2,
-    input wire [31:0] CPU_Debug_DataRAM_WD2,
-    input wire [3:0] CPU_Debug_DataRAM_WE2,
-    output wire [31:0] CPU_Debug_DataRAM_RD2,
-    input wire [31:0] CPU_Debug_InstRAM_A2,
-    input wire [31:0] CPU_Debug_InstRAM_WD2,
-    input wire [ 3:0] CPU_Debug_InstRAM_WE2,
-    output wire [31:0] CPU_Debug_InstRAM_RD2,
-    output wire [31:0] CPU_Debug_Register3
+    output wire [31:0] DCacheMissCounter
     );
 	//wire values definitions
     wire StallF, FlushF, StallD, FlushD, StallE, FlushE, StallM, FlushM, StallW, FlushW;
@@ -139,10 +131,6 @@ module RV32Core(
         .en(~StallD),
         .A(PCF),
         .RD(Instr),
-        .A2(CPU_Debug_InstRAM_A2),
-        .WD2(CPU_Debug_InstRAM_WD2),
-        .WE2(CPU_Debug_InstRAM_WE2),
-        .RD2(CPU_Debug_InstRAM_RD2),
         .PCF(PCF),
         .PCD(PCD) 
     );
@@ -181,8 +169,7 @@ module RV32Core(
         .A3(RdW),
         .WD3(RegWriteData),
         .RD1(RegOut1D),
-        .RD2(RegOut2D),
-        .D3(CPU_Debug_Register3)
+        .RD2(RegOut2D)
     );
 
     // ---------------------------------------------
@@ -293,10 +280,6 @@ module RV32Core(
         .WE(MemWriteM),
         .RD(DM_RD),
         .LoadedBytesSelect(LoadedBytesSelect),
-        .A2(CPU_Debug_DataRAM_A2),
-        .WD2(CPU_Debug_DataRAM_WD2),
-        .WE2(CPU_Debug_DataRAM_WE2),
-        .RD2(CPU_Debug_DataRAM_RD2),
         .ResultM(ResultM),
         .ResultW(ResultW), 
         .RdM(RdM),
@@ -313,7 +296,8 @@ module RV32Core(
         .CSRdW(CSRdW),
         .rst(CPU_RST),  // BRAM 复位
         .MemReadM(MemToRegM == 2'b01),
-        .DCacheMiss(DCacheMiss)
+        .DCacheMiss(DCacheMiss),
+        .DCacheMissCounter(DCacheMissCounter)
     );
     
     DataExt DataExt1(

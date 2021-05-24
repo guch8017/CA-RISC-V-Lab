@@ -4,3 +4,5 @@ lab1/lab1_PB18030825_顾超_0
 lab1/lab1_PB18030825_顾超_1
 lab1/lab1_PB18030825_顾超_2
 lab2/vivado
+lab3/ASM-Benchmark/generate_data/*.sv
+lab3/ASM-Benchmark/generate_inst/*.sv

@@ -59,14 +59,6 @@ always @(*) begin
 end
 
 assign cache_hit = |hit;    // 并行或运算
-/*
-always @ (*) begin              // 判断 输入的address 是否在 cache 中命中
-    if(valid[set_addr] && cache_tags[set_addr] == tag_addr)   // 如果 cache line有效，并且tag与输入地址中的tag相等，则命中
-        cache_hit = 1'b1;
-    else
-        cache_hit = 1'b0;
-end
-*/
 
 reg [31:0]fifo_buffer[SET_SIZE][WAY_CNT];           // 简单的Queue数据结构，在SWAP_IN_OK阶段会循环右移一次
 wire [31:0]fifo_queue_tail;

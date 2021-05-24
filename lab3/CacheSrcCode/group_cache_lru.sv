@@ -60,7 +60,7 @@ end
 
 assign cache_hit = |hit;    // 并行或运算
 
-reg [WAY_CNT - 1:0]lru_buffer[SET_SIZE][WAY_CNT];   // 独热码编码的LRU结构，在SWAP_IN_OK阶段每一位循环右移一次
+reg [WAY_CNT - 1:0]lru_buffer[SET_SIZE][WAY_CNT];   // 独热码编码的LRU结构
 reg [31:0]lru_tail;
 
 
@@ -101,10 +101,26 @@ always @ (posedge clk or posedge rst) begin     // ?? cache ???
                                     end else if(wr_req) begin // 如果cache命中，并且是写请求，
                                         cache_mem[set_addr][i][line_addr] <= wr_data;   // 则直接向cache中写入数据
                                         dirty[set_addr][i] <= 1'b1;                     // 写数据的同时置脏位
-                                    end 
+                                    end
+                                    // Cache HIT 情况， 直接在IDLE状态更新LRU队列
+                                    // BEGIN OF LRU UPDATE
+                                    if(rd_req || wr_req) begin
+                                        for (integer j = 0; j < WAY_CNT; j++) begin
+                                            if (j != i) begin
+                                                // 比该Cache晚访问过的Cache全部右移一位，其余不变
+                                                if(lru_buffer[set_addr][j] > lru_buffer[set_addr][i]) begin
+                                                    lru_buffer[set_addr][j] <= lru_buffer[set_addr][j] >> 1;
+                                                end
+                                            end
+                                            else begin
+                                                // 置最新访问的数据为 WAY_CNT'b1000...0
+                                                lru_buffer[set_addr][j] <= (1 << (WAY_CNT - 1));
+                                            end
+                                        end
+                                    end
+                                    // END OF LRU UPDATE
                                 end
                             end
-                            
                         end else begin
                             if(wr_req | rd_req) begin   // 如果 cache 未命中，并且有读写请求，则需要进行换入
                             // ========= BEGIN OF LRU ALGO =============
@@ -143,7 +159,7 @@ always @ (posedge clk or posedge rst) begin     // ?? cache ???
                                 lru_buffer[set_addr][i] <= lru_buffer[set_addr][i] >> 1;
                             end
                             else begin
-                                lru_buffer[set_addr][lru_tail] <= 1'b1 << (WAY_CNT - 1);
+                                lru_buffer[set_addr][lru_tail] <= 1 << (WAY_CNT - 1);
                             end
                         end
                         // ===== END OF LRU UPDATE ======

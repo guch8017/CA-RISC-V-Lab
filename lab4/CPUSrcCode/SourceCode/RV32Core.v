@@ -13,6 +13,7 @@
     //RV32I 指令集CPU的顶层模块
 //实验要求  
     //无需修改
+`include "Parameters.v"
 
 module RV32Core(
     input wire CPU_CLK,
@@ -99,16 +100,44 @@ module RV32Core(
     assign CSRFwE = (CSR_FW[1]) ? (ResultW) : ((CSR_FW[0]) ? (AluOutM) : (CSROutE));
     assign CSRdD = Instr[31:20];
 
+    // ============= Branch Predict ==============
+
+    wire [31:0] PCPredict, BranchPC;
+    wire PR_IN, PRF, PRD;                                 // 若BTB命中则置1，否则输出PC+4，该信号置0
+    wire PredictCorrect;
+    wire BranchFail;
+
+    assign PredictCorrect = (PRD == 1'b1 && BranchE == 1'b1 && PCD == BrNPC) ||     // 预测跳转，且实际跳转，且目标地址一致
+                            (PRD == 1'b0 && BranchE == 1'b0);                       // 预测不跳转且实际不跳转
+    assign BranchFail = (BranchTypeE != `NOBRANCH) && ~PredictCorrect;              // 预测失败，需要交由Hazard处理Branch
+    assign BranchPC = (PRD == 1'b1 && BranchE == 1'b0) ? (PCE + 4)                  // 预测跳转但实际没有跳转，下一个值为当前PC + 4
+                                                       : (BrNPC);                   // 预测不跳转但实际跳转，下一个值为BrNPC
+
+    branch_predictor BPInstance(
+        .clk(CPU_CLK),
+        .rst(CPU_RST),
+        .PCF(PCF),
+        .PCE(PCE),
+        .BrNPCE(BrNPC),
+        .branch_ex(BranchTypeE != `NOBRANCH),
+        .branch_hit_ex(BranchE),
+        .pc_predict(PCPredict),
+        .hit(PR_IN)
+    );
+
+
+    // ============= END BRANCH PRED =============
+
     //Module connections
     // ---------------------------------------------
     // PC-IF
     // ---------------------------------------------
     NPC_Generator NPC_Generator1(
-        .PCF(PCF),
+        .PCPredict(PCPredict),
         .JalrTarget(AluOutE), 
-        .BranchTarget(BrNPC), 
+        .BranchTarget(BranchPC), 
         .JalTarget(JalNPC),
-        .BranchE(BranchE),
+        .BranchE(BranchFail),
         .JalD(JalD),
         .JalrE(JalrE),
         .PC_In(PC_In)
@@ -119,7 +148,9 @@ module RV32Core(
         .en(~StallF),
         .clear(FlushF), 
         .PC_In(PC_In),
-        .PCF(PCF)
+        .PCF(PCF),
+        .PR_In(PR_IN),
+        .PRF(PRF)
     );
 
     // ---------------------------------------------
@@ -132,7 +163,9 @@ module RV32Core(
         .A(PCF),
         .RD(Instr),
         .PCF(PCF),
-        .PCD(PCD) 
+        .PCD(PCD),
+        .PRF(PRF),
+        .PRD(PRD)
     );
 
     ControlUnit ControlUnit1(
@@ -311,7 +344,7 @@ module RV32Core(
     // ---------------------------------------------
     HarzardUnit HarzardUnit1(
         .CpuRst(CPU_RST),
-        .BranchE(BranchE),
+        .BranchE(BranchFail),
         .JalrE(JalrE),
         .JalD(JalD),
         .Rs1D(Rs1D),

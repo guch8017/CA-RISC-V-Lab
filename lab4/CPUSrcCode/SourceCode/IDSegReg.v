@@ -45,13 +45,22 @@ module IDSegReg(
     output wire [31:0] RD2,
     //
     input wire [31:0] PCF,
-    output reg [31:0] PCD 
+    output reg [31:0] PCD,
+
+    input wire PRF,
+    output reg PRD
     );
     
-    initial PCD = 0;
+    initial begin 
+        PCD = 0;
+        PRD = 0;
+    end
+
     always@(posedge clk)
-        if(en)
+        if(en) begin
             PCD <= clear ? 0: PCF;
+            PRD <= clear ? 0: PRF;
+        end
     
     wire [31:0] RD_raw;
     /*
@@ -65,7 +74,7 @@ module IDSegReg(
          .doutb  ( RD2        )
      );
      */
-    InstructionRAM InstructionRamInst(
+    InstructionCacheQS InstructionRamInst(
         .clk(clk),
         .write_en(1'b0),
         .addr(A[31:2]),

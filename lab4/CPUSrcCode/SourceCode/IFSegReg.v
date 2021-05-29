@@ -18,16 +18,26 @@ module IFSegReg(
     input wire clk,
     input wire en, clear,
     input wire [31:0] PC_In,
-    output reg [31:0] PCF
+    output reg [31:0] PCF,
+    input wire PR_In,
+    output reg PRF
     );
-    initial PCF = 0;
-    
+
+    initial begin
+        PCF = 0;
+        PRF = 0;
+    end
+
     always@(posedge clk)
         if(en) begin
-            if(clear)
+            if(clear) begin
                 PCF <= 0;
-            else 
+                PRF <= 0;
+            end
+            else begin
                 PCF <= PC_In;
+                PRF <= PR_In;
+            end
         end
     
 endmodule

@@ -25,7 +25,7 @@
     //补全模块  
 
 module NPC_Generator(
-    input wire [31:0] PCF,JalrTarget, BranchTarget, JalTarget,
+    input wire [31:0] PCPredict, JalrTarget, BranchTarget, JalTarget,
     input wire BranchE,JalD,JalrE,
     output reg [31:0] PC_In
     );
@@ -41,7 +41,7 @@ module NPC_Generator(
             PC_In <= JalTarget;
         end
         else begin
-            PC_In <= PCF + 4;
+            PC_In <= PCPredict;
         end
     end
     

@@ -20,7 +20,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module branch_predictor #(
+module bht_predictor #(
         parameter PC_CNT = 4
     
     )(
@@ -50,13 +50,14 @@ module branch_predictor #(
     reg[31:0] pc_buffer[NUM_PC];    // Source
     reg[31:0] dst_buffer[NUM_PC];   // Destination
     reg valid[NUM_PC];              // Predictor
+    reg [1:0]bht_buffer[NUM_PC];    // BHT Buffer，当buffer为1x时预测命中，0x时预测不命中
 
     wire [PC_CNT:0] pc_entry_ud;    // Branch指令所在的PC INDEX
     wire [PC_CNT:0] pc_entry_if;    // IF段PC INDEX
     assign pc_entry_ud = PCE[PC_CNT+2:2];
     assign pc_entry_if = PCF[PC_CNT+2:2];
 
-    
+    // ======= PHASE 2 - 2'bit BHT Predictor
     always @(posedge clk or posedge rst) begin
         if (rst) begin
             for(integer i = 0; i < NUM_PC; ++i) begin
@@ -68,31 +69,47 @@ module branch_predictor #(
         else begin
             // Branch指令到达EX段，更新BTB
             if (branch_ex) begin
-                // 分支表不存在表项，清除
-                if(pc_buffer[pc_entry_ud] != PCE) begin
+                // 分支表不存在表项，重置BHT状态机
+                if(pc_buffer[pc_entry_ud] != PCE || valid[pc_entry_ud] == 1'b0) begin
                     pc_buffer[pc_entry_ud] <= PCE;
-                end
-                // Branch HIT，状态更新
-                if (branch_hit_ex) begin
-                    dst_buffer[pc_entry_ud] <= BrNPCE;
                     valid[pc_entry_ud] <= 1'b1;
+                    if (branch_hit_ex) begin
+                        bht_buffer[pc_entry_ud] <= 2'b10;
+                    end
+                    else begin
+                        bht_buffer[pc_entry_ud] <= 2'b01;
+                    end
                 end
-                // Branch MISS，状态更新
+                // 分支表命中，进行状态更新
                 else begin
-                    valid[pc_entry_ud] <= 1'b0;
+                    // Branch HIT
+                    if (branch_hit_ex) begin
+                        dst_buffer[pc_entry_ud] <= BrNPCE;
+                        // 状态机更新，防止溢出
+                        if (bht_buffer[pc_entry_ud] != 2'b11) begin
+                            bht_buffer[pc_entry_ud] <= bht_buffer[pc_entry_ud] + 1;
+                        end
+                    end
+                    // Branch MISS
+                    else begin
+                        if (bht_buffer[pc_entry_ud] != 2'b00) begin
+                            bht_buffer[pc_entry_ud] <= bht_buffer[pc_entry_ud] - 1;
+                        end
+                    end
                 end
             end
         end
     end
+    // ======= END OF P2 ==================
 
     // 此处接管了NPC的PC+4功能
     always @(*) begin
-        // 没有表项 或 表项无效，输出PC+4
-        if(pc_buffer[pc_entry_if] != PCF || valid[pc_entry_if] != 1'b1) begin
+        // 没有表项 或 表项无效 或 BHT预测不命中 输出PC+4
+        if(pc_buffer[pc_entry_if] != PCF || valid[pc_entry_if] != 1'b1 || bht_buffer[pc_entry_if][1] == 1'b0) begin
             pc_predict <= PCF + 4;
             hit <= 0;
         end
-        // BTB命中，输出BTB值
+        // BHT预测命中
         else begin
             pc_predict <= dst_buffer[pc_entry_if];
             hit <= 1'b1;

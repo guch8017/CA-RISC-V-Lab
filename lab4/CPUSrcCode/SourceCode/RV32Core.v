@@ -113,7 +113,7 @@ module RV32Core(
     assign BranchPC = (PRD == 1'b1 && BranchE == 1'b0) ? (PCE + 4)                  // 预测跳转但实际没有跳转，下一个值为当前PC + 4
                                                        : (BrNPC);                   // 预测不跳转但实际跳转，下一个值为BrNPC
 
-    branch_predictor BPInstance(
+    bht_predictor BPInstance(
         .clk(CPU_CLK),
         .rst(CPU_RST),
         .PCF(PCF),
@@ -124,6 +124,43 @@ module RV32Core(
         .pc_predict(PCPredict),
         .hit(PR_IN)
     );
+
+    // Register for statistics
+    reg [31:0] BranchCounter;
+    reg [31:0] BranchCorrectCounter;
+    reg [31:0] CycleCounter;
+    reg DCacheFlop;
+
+    always @(posedge CPU_CLK or posedge CPU_RST) begin
+        if(CPU_RST) begin
+            BranchCounter <= 0;
+            BranchCorrectCounter <= 0;
+            DCacheFlop <= 0;
+            CycleCounter <= 0;
+        end
+        else begin
+            CycleCounter <= CycleCounter + 1;
+            if(BranchTypeE != `NOBRANCH) begin
+                if(DCacheMiss) begin
+                    // 防止Stall导致的统计错误
+                    if(!DCacheFlop) begin
+                        DCacheFlop <= 1'b1;
+                        BranchCounter <= BranchCounter + 1;
+                        if(PredictCorrect) begin
+                            BranchCorrectCounter <= BranchCorrectCounter + 1;
+                        end
+                    end
+                end
+                else begin
+                    DCacheFlop <= 1'b0;
+                    BranchCounter <= BranchCounter + 1;
+                    if(PredictCorrect) begin
+                        BranchCorrectCounter <= BranchCorrectCounter + 1;
+                    end
+                end
+            end
+        end
+    end
 
 
     // ============= END BRANCH PRED =============

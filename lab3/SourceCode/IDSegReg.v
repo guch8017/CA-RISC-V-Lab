@@ -65,7 +65,7 @@ module IDSegReg(
          .doutb  ( RD2        )
      );
      */
-    InstructionCacheQS256 InstructionRamInst(
+    InstructionCacheQS InstructionRamInst(
         .clk(clk),
         .write_en(1'b0),
         .addr(A[31:2]),
